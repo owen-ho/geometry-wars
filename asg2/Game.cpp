@@ -269,7 +269,7 @@ void Game::sCollision()
 	// use collision radius, not shape radius
 
 	// Collision between player and enemy
-	for (auto e : m_entities.getEntities("enemy"))
+	for (auto& e : m_entities.getEntities("enemy"))
 	{
 		auto& enemyPos = e->cShape->circle.getPosition();
 		auto& playerPos = m_player->cShape->circle.getPosition();
@@ -287,9 +287,9 @@ void Game::sCollision()
 	}
 
 	// Collision between bullet and enemy
-	for (auto b : m_entities.getEntities("bullet"))
+	for (auto& b : m_entities.getEntities("bullet"))
 	{
-		for (auto e : m_entities.getEntities("enemy"))
+		for (auto& e : m_entities.getEntities("enemy"))
 		{
 			auto& bulletPos = b->cShape->circle.getPosition();
 			auto& enemyPos = e->cShape->circle.getPosition();
@@ -428,7 +428,7 @@ void Game::sUserInput()
 		{
 			if (event.mouseButton.button == sf::Mouse::Left)
 			{
-				std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.y << ")\n";
+				//std::cout << "Left mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.y << ")\n";
 				spawnBullet(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
 			}
 
