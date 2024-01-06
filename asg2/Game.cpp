@@ -180,10 +180,34 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2& target)
 	bulletEntity->cShape = std::make_shared<CShape>(m_bulletConfig.SR, m_bulletConfig.V, sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB, 150), sf::Color(m_bulletConfig.OR, m_bulletConfig.OG, m_bulletConfig.OB), m_bulletConfig.OT);
 }
 
-void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity)
+void Game::spawnSpecialWeapon(std::shared_ptr<Entity> entity, const Vec2& target)
 {
 	// TODO: EXTRA MARKS
-	//auto entity = m_entities.addEntity("special gun");
+	const auto& baseTargetDir = (target - (entity->cTransform->pos)).normalize();
+	std::cout << "Base at: " << baseTargetDir.x << ", " << baseTargetDir.y << "\n";
+	
+	Vec2 targetDir = baseTargetDir;
+	size_t i = 0;
+
+	while(true)
+	{
+		// Could probably do this loop without a while true but i cant think rn
+		auto spawnPos = targetDir + entity->cTransform->pos;
+		bool xWithinWindow = spawnPos.x > 0 && spawnPos.x < m_window.getSize().x;
+		bool yWithinWindow = spawnPos.y > 0 && spawnPos.y < m_window.getSize().y;
+
+		if (!xWithinWindow || !yWithinWindow) break;
+
+		//std::cout << "Spawned at: " << entity->cTransform->pos.x + targetDir.x << ", " << entity->cTransform->pos.y + targetDir.y << "\n";
+		auto e = m_entities.addEntity("bullet");
+		e->cTransform = std::make_shared<CTransform>(entity->cTransform->pos + targetDir, Vec2(0, 0), 0.0f);
+		e->cShape = std::make_shared<CShape>(m_bulletConfig.SR, m_bulletConfig.V, sf::Color(m_bulletConfig.FR, m_bulletConfig.FG, m_bulletConfig.FB, 150), sf::Color::Transparent, 0.0f);
+		e->cLifespan = std::make_shared<CLifespan>(30);
+		i++;
+		targetDir = baseTargetDir + (baseTargetDir*entity->cShape->circle.getRadius())*i;
+	}
+
+	m_lastSpecialWeaponTime = m_currentFrame;
 }
 
 void Game::sMovement()
@@ -285,7 +309,7 @@ void Game::sCollision()
 			spawnPlayer();
 		}
 	}
-
+	
 	// Collision between bullet and enemy
 	for (auto& b : m_entities.getEntities("bullet"))
 	{
@@ -299,7 +323,9 @@ void Game::sCollision()
 			if (bp.dist(ep) <= (m_enemyConfig.CR + m_bulletConfig.CR))
 			{
 				//std::cout << "Collision detected!!\n";
+				std::cout << "Score +" << e->cShape->circle.getPointCount() * 100 << "\n";
 				m_player->cScore->score += e->cShape->circle.getPointCount() * 100;
+
 				b->destroy();
 				e->destroy();
 				spawnSmallEnemies(e);
@@ -314,7 +340,7 @@ void Game::sEnemySpawner()
 	// use (m_currentFrame - m_lastEnemySpawnTime) to find how long it has been since last enemy spawned
 	int timeSinceLastEnemySpawned = m_currentFrame - m_lastEnemySpawnTime;
 	// replace 60 with interval specified in config
-	if (timeSinceLastEnemySpawned > 60) spawnEnemy();
+	if (timeSinceLastEnemySpawned > m_enemyConfig.SI) spawnEnemy();
 }
 
 void Game::sRender()
@@ -336,7 +362,8 @@ void Game::sRender()
 		// draw entities's sf::CircleShape
 		m_window.draw(e->cShape->circle);
 	}
-
+	int timeSinceLastSpecial = m_currentFrame - m_lastSpecialWeaponTime;
+	m_player->cShape->circle.setOutlineColor(sf::Color(m_playerConfig.OR, m_playerConfig.OG, m_playerConfig.OB, timeSinceLastSpecial > 120 ? 255 : timeSinceLastSpecial / 120.0f * 255.0f));
 	m_text.setString("SCORE: " + std::to_string(m_player->cScore->score));
 	m_window.draw(m_text);
 	m_window.display();
@@ -434,9 +461,14 @@ void Game::sUserInput()
 
 			if (event.mouseButton.button == sf::Mouse::Right)
 			{
-				std::cout<<"Right mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.y << ")\n";
+				//std::cout<<"Right mouse button clicked at (" << event.mouseButton.x << ", " << event.mouseButton.y << ")\n";
 				// call spawnSpecialWeapon here
-				spawnSpecialWeapon(m_player);
+				int timeSinceLastSpecial = m_currentFrame - m_lastSpecialWeaponTime;
+				if (timeSinceLastSpecial > 120)  // Usable every 2s
+				{
+					spawnSpecialWeapon(m_player, Vec2(event.mouseButton.x, event.mouseButton.y));
+				}
+				else std::cout << "Wait " << timeSinceLastSpecial / 60.0f << "s before lauching another special attack!\n";
 			}
 		}
 	}

@@ -25,6 +25,7 @@ class Game
 	int m_score = 0;
 	int m_currentFrame = 0;
 	int m_lastEnemySpawnTime = 0;
+	int m_lastSpecialWeaponTime = 0;
 	bool m_paused = false; // whether game logic should be updated
 	bool m_running = true; // whether game is running
 
@@ -44,7 +45,7 @@ class Game
 	void spawnEnemy();
 	void spawnSmallEnemies(std::shared_ptr<Entity> entity);
 	void spawnBullet(std::shared_ptr<Entity> entity, const Vec2& mousePos);
-	void spawnSpecialWeapon(std::shared_ptr<Entity> entity);
+	void spawnSpecialWeapon(std::shared_ptr<Entity> entity, const Vec2& target);
 
 public:
 	Game(const std::string& config); // takes in game config file
