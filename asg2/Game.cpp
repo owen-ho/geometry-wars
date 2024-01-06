@@ -315,6 +315,7 @@ void Game::sCollision()
 	{
 		for (auto& e : m_entities.getEntities("enemy"))
 		{
+			if (!e->isActive())continue;
 			auto& bulletPos = b->cShape->circle.getPosition();
 			auto& enemyPos = e->cShape->circle.getPosition();
 			auto bp = Vec2(bulletPos.x, bulletPos.y);
