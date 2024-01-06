@@ -309,6 +309,22 @@ void Game::sCollision()
 			spawnPlayer();
 		}
 	}
+
+	for (auto& e : m_entities.getEntities("smallEnemies"))
+	{
+		auto& enemyPos = e->cShape->circle.getPosition();
+		auto& playerPos = m_player->cShape->circle.getPosition();
+		// Convert to Vec2 defined in project instead of SFML
+		auto ep = Vec2(enemyPos.x, enemyPos.y);
+		auto pp = Vec2(playerPos.x, playerPos.y);
+		if (pp.dist(ep) <= (m_enemyConfig.CR + m_playerConfig.CR))
+		{
+			if (!e->isActive())continue;
+			std::cout << "Score +" << e->cShape->circle.getPointCount() * 5 << "\n";
+			m_player->cScore->score += e->cShape->circle.getPointCount() * 5;
+			e->destroy();
+		}
+	}
 	
 	// Collision between bullet and enemy
 	for (auto& b : m_entities.getEntities("bullet"))
